@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EcoSort — Prototype Lengkap</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#22c55e;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#061019,#0b1724);color:#e6eef8;min-height:100vh}
+    .hidden{display:none}
+    button{cursor:pointer}
+
+    /* LOGIN */
+    #login-page{min-height:100vh;display:grid;place-items:center}
+    .login-card{background:var(--card);padding:28px;border-radius:14px;width:320px}
+    .login-card h2{text-align:center;margin-top:0}
+    .login-card input{width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:white}
+
+    header{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#10b981);display:grid;place-items:center;font-weight:700;color:#022a0b}
+    nav{margin-left:auto;display:flex;gap:8px}
+    nav button{background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--muted);padding:8px 12px;border-radius:8px}
+    nav button.active{border-color:var(--accent);color:var(--accent)}
+
+    main{display:flex;gap:20px;padding:22px}
+    .sidebar{width:260px;background:var(--card);padding:16px;border-radius:12px}
+    .content{flex:1;padding:18px;border-radius:12px}
+    .card{background:var(--glass);padding:14px;border-radius:10px;margin-bottom:12px}
+    .btn{background:var(--accent);border:none;border-radius:8px;padding:8px 12px}
+    .small{font-size:13px;color:var(--muted)}
+    .points{font-size:26px;color:var(--accent);font-weight:bold}
+
+    .preview{min-height:200px;border:1px dashed rgba(255,255,255,.2);display:grid;place-items:center}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="login-card">
+    <h2>Login EcoSort</h2>
+    <input id="login-name" placeholder="Nama pengguna" />
+    <input id="login-email" placeholder="Email" />
+    <button class="btn" style="width:100%" onclick="login()">Masuk</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+<header>
+  <div class="logo">ES</div>
+  <div>
+    <div style="font-weight:700">EcoSort</div>
+    <div class="small">Halo, <span id="user-name"></span></div>
+  </div>
+  <nav>
+    <button data-view="home" class="active">Beranda</button>
+    <button data-view="scan">Scan</button>
+    <button data-view="bank">Bank Sampah</button>
+    <button data-view="schedule">Jadwal</button>
+    <button data-view="reward">Reward</button>
+    <button onclick="logout()">Logout</button>
+  </nav>
+</header>
+
+<main>
+<aside class="sidebar">
+  <div class="card">
+    <div class="small">Poin</div>
+    <div class="points" id="points">0</div>
+  </div>
+</aside>
+
+<section class="content">
+  <div id="view-home" class="view">
+    <div class="card">Selamat datang di EcoSort</div>
+  </div>
+
+  <div id="view-scan" class="view hidden">
+    <div class="card">
+      <h3>Scan Sampah (AI Simulasi)</h3>
+      <div class="preview" id="preview">Preview Gambar</div><br>
+      <input type="file" id="file" accept="image/*"><br><br>
+      <button class="btn" onclick="scanAI()">Scan dengan AI</button>
+      <div id="scan-result" class="small"></div>
+    </div>
+  </div>
+
+  <div id="view-bank" class="view hidden">
+    <div class="card">Bank Sampah Hijau — 1.2 km<br>Pengambilan: Senin & Kamis</div>
+  </div>
+
+  <div id="view-schedule" class="view hidden">
+    <div class="card">Pengambilan Berikutnya: <b>20 Desember 2025</b></div>
+  </div>
+
+  <div id="view-reward" class="view hidden">
+    <div class="card">Tukar poin (prototype)</div>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+/* LOGIN */
+function login(){
+  const name=document.getElementById('login-name').value
+  if(!name){alert('Isi nama');return}
+  localStorage.setItem('ecosort_user',name)
+  init()
+}
+function logout(){localStorage.removeItem('ecosort_user');location.reload()}
+
+function init(){
+  const u=localStorage.getItem('ecosort_user')
+  if(!u)return
+  document.getElementById('login-page').style.display='none'
+  document.getElementById('app').classList.remove('hidden')
+  document.getElementById('user-name').textContent=u
+}
+
+/* NAV */
+document.querySelectorAll('nav button[data-view]').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'))
+    document.getElementById('view-'+b.dataset.view).classList.remove('hidden')
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'))
+    b.classList.add('active')
+  }
+})
+
+/* SCAN */
+const file=document.getElementById('file')
+file.onchange=e=>{
+  const img=document.createElement('img')
+  img.src=URL.createObjectURL(e.target.files[0])
+  img.style.maxWidth='100%'
+  const p=document.getElementById('preview')
+  p.innerHTML=''
+  p.appendChild(img)
+}
+function scanAI(){
+  document.getElementById('scan-result').textContent='Hasil: Anorganik (+10 poin)'
+  const pts=Number(localStorage.getItem('pts')||0)+10
+  localStorage.setItem('pts',pts)
+  document.getElementById('points').textContent=pts
+}
+
+init()
+</script>
+</body>
+</html>
